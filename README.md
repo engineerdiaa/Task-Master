@@ -39,10 +39,47 @@ The database is created automatically the first time the app starts, at
 `instance/test.db`. To start over with an empty list, stop the app and delete
 that file.
 
+You can also start the app with Flask's own command:
+
+```bash
+flask --app app run
+```
+
+## Debug mode
+
+Debug mode reloads the app when you change the code and shows detailed error
+pages in the browser. Those pages include a debugger that can run Python
+code, so debug mode is off by default and must never be on when other people
+can reach the app. Turn it on only while developing:
+
+```powershell
+# Windows (PowerShell)
+$env:FLASK_DEBUG = "1"
+python app.py
+```
+
+```bash
+# macOS / Linux
+FLASK_DEBUG=1 python app.py
+```
+
+Or use `flask --app app run --debug`.
+
+## Settings
+
+Settings are read from environment variables that start with `FLASK_`. For
+example, to use a different database file:
+
+```bash
+FLASK_SQLALCHEMY_DATABASE_URI=sqlite:///other.db python app.py
+```
+
 ## Project layout
 
 ```
-app.py              The Flask app: database model and routes
+app.py              Creates and configures the Flask app (create_app)
+models.py           Database model (Todo)
+tasks.py            Pages and actions for tasks (Flask blueprint)
 migrations/         Database migrations (Flask-Migrate / Alembic)
 templates/          HTML templates (Jinja)
 static/css/         Stylesheet
@@ -56,7 +93,7 @@ the database in step with the code. When the app starts it applies any
 migrations the database is missing, so existing tasks are kept when new
 columns are added.
 
-If you change the model in `app.py`, create a migration for it:
+If you change a model in `models.py`, create a migration for it:
 
 ```bash
 flask --app app db migrate -m "Describe the change"
