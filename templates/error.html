@@ -5,9 +5,9 @@
 {%endblock%}
 
 {%block body%}
-<div class="content">
+<section class="card narrow">
     <h1>{{ error.code }} {{ error.name }}</h1>
-    <p class="message">{{ error.description }}</p>
-    <p class="message"><a href="{{ url_for('tasks.index') }}">Back to your tasks</a></p>
-</div>
+    <p>{{ error.description }}</p>
+    <p><a href="{{ url_for('tasks.index') }}" class="button button-primary">Back to your tasks</a></p>
+</section>
 {%endblock%}

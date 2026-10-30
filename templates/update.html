@@ -1,24 +1,22 @@
 {%extends 'base.html'%}
 
 {%block head%}
-<title>Task Master</title>
+<title>Edit task - Task Master</title>
 {%endblock%}
 
 {%block body%}
-<div class="content">
-    <h1>Update Task</h1>
-
-<br>
-    <div class="form1">
-        {% if error %}
-        <p class="error" role="alert">{{ error }}</p>
-        {% endif %}
-        <form action="{{ url_for('tasks.update', task_id=task.id, **view) }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% include '_task_fields.html' %}
-            <input type="submit" value="Update">
+<h1>Edit task</h1>
+<section class="card narrow">
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="stacked-form" action="{{ url_for('tasks.update', task_id=task.id, **view) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% include '_task_fields.html' %}
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">Save changes</button>
             <a href="{{ url_for('tasks.index', **view) }}" class="cancel">Cancel</a>
-        </form>
-    </div>
-</div>
+        </div>
+    </form>
+</section>
 {%endblock%}

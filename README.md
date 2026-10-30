@@ -16,6 +16,7 @@ stored in a SQLite database.
 - Show all, active or done tasks, and search them by text
 - Sort the list by date added, due date or priority
 - See when each task was added
+- Clean, responsive design that works on phones, with automatic dark mode
 - Confirmation messages after adding, editing or deleting a task
 
 ## Requirements

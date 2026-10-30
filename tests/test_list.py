@@ -66,7 +66,7 @@ def test_priority_saved_and_shown(app, user):
     add_task(user, 'Urgent', priority='3')
     with app.app_context():
         assert db.session.get(Todo, 1).priority == 3
-    assert 'class="priority priority-3">High<' in page_text(user.get('/'))
+    assert re.search(r'class="priority priority-3"[^>]*>High<', page_text(user.get('/')))
     assert '<option value="3" selected>High</option>' in page_text(user.get('/update/1'))
 
 

@@ -5,24 +5,28 @@
 {%endblock%}
 
 {%block body%}
-<div class="content">
+<section class="card narrow">
     <h1>Log in</h1>
-    <div class="form1">
-        {% if error %}
-        <p class="error" role="alert">{{ error }}</p>
-        {% endif %}
-        <form action="{{ url_for('auth.login', next=next_url) }}" method="POST" class="stacked">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="stacked-form" action="{{ url_for('auth.login', next=next_url) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
             <label for="username">Username</label>
             <input type="text" name="username" id="username" value="{{ username }}"
                    autocomplete="username" required autofocus>
+        </div>
+        <div class="field">
             <label for="password">Password</label>
             <input type="password" name="password" id="password"
                    autocomplete="current-password" required>
-            <label class="checkbox"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
-            <input type="submit" value="Log in">
-        </form>
-        <p>New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
-    </div>
-</div>
+        </div>
+        <label class="checkbox"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">Log in</button>
+        </div>
+    </form>
+    <p class="message">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+</section>
 {%endblock%}

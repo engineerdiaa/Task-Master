@@ -1,36 +1,51 @@
 {%extends 'base.html'%}
 
 {%block head%}
-<title>Task Master</title>
+<title>Your tasks - Task Master</title>
 {%endblock%}
 
 {%block body%}
-<div class="content">
-    <h1>Task Master</h1>
-    <nav class="filters" aria-label="Show tasks">
-        {% set current_status = view.get('status', 'all') %}
-        {% for key, (label, _) in STATUS_FILTERS.items() %}
-            {% if key == current_status %}
-            <strong aria-current="true">{{ label }}</strong>
-            {% else %}
-            <a href="{{ url_for('tasks.index', **dict(view, status=key)) }}">{{ label }}</a>
-            {% endif %}
-            {% if not loop.last %}|{% endif %}
-        {% endfor %}
-    </nav>
-    <form class="search" action="{{ url_for('tasks.index') }}" method="GET" role="search">
-        {% for key, value in view.items() if key != 'q' %}
-        <input type="hidden" name="{{ key }}" value="{{ value }}">
-        {% endfor %}
-        <input type="search" name="q" value="{{ view.q }}" placeholder="Search tasks"
-               aria-label="Search tasks" maxlength="{{ TASK_MAX_LENGTH }}">
-        <input type="submit" value="Search">
-        {% if view.q %}
-        <a href="{{ url_for('tasks.index', **dict(view, q=None)) }}">Clear search</a>
-        {% endif %}
+<h1>Your tasks</h1>
+
+<section class="card" aria-labelledby="add-heading">
+    <h2 id="add-heading" class="visually-hidden">Add a task</h2>
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="task-form" action="{{ url_for('tasks.index', **view) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% include '_task_fields.html' %}
+        <button type="submit" class="button button-primary">Add task</button>
     </form>
-    <nav class="sort" aria-label="Sort tasks">
-        Sort by:
+</section>
+
+<section class="card" aria-labelledby="list-heading">
+    <h2 id="list-heading" class="visually-hidden">Task list</h2>
+    <div class="toolbar">
+        <nav class="filters pills" aria-label="Show tasks">
+            {% set current_status = view.get('status', 'all') %}
+            {% for key, (label, _) in STATUS_FILTERS.items() %}
+                {% if key == current_status %}
+                <strong aria-current="true">{{ label }}</strong>
+                {% else %}
+                <a href="{{ url_for('tasks.index', **dict(view, status=key)) }}">{{ label }}</a>
+                {% endif %}
+            {% endfor %}
+        </nav>
+        <form class="search" action="{{ url_for('tasks.index') }}" method="GET" role="search">
+            {% for key, value in view.items() if key != 'q' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
+            <input type="search" name="q" value="{{ view.q }}" placeholder="Search tasks"
+                   aria-label="Search tasks" maxlength="{{ TASK_MAX_LENGTH }}">
+            <button type="submit" class="button button-quiet">Search</button>
+            {% if view.q %}
+            <a href="{{ url_for('tasks.index', **dict(view, q=None)) }}">Clear search</a>
+            {% endif %}
+        </form>
+    </div>
+    <nav class="sort pills" aria-label="Sort tasks">
+        <span class="label">Sort by</span>
         {% set current_sort = view.get('sort', 'added') %}
         {% for key, (label, _) in SORT_ORDERS.items() %}
             {% if key == current_sort %}
@@ -38,68 +53,61 @@
             {% else %}
             <a href="{{ url_for('tasks.index', **dict(view, sort=key)) }}">{{ label }}</a>
             {% endif %}
-            {% if not loop.last %}|{% endif %}
         {% endfor %}
     </nav>
+
     {% if tasks|length < 1 %}
         {% if view.status or view.q %}
-    <h4>No tasks match. <a href="{{ url_for('tasks.index', **dict(view, status=None, q=None)) }}">Show all tasks</a></h4>
+    <p class="empty">No tasks match. <a href="{{ url_for('tasks.index', **dict(view, status=None, q=None)) }}">Show all tasks</a></p>
         {% else %}
-    <h4>You have no tasks yet. Add one below.</h4>
+    <p class="empty">You have no tasks yet. Add one above.</p>
         {% endif %}
     {% else %}
-    <table>
-        <tr>
-            <th>Done</th>
-            <th>Task</th>
-            <th>Due</th>
-            <th>Priority</th>
-            <th>Added</th>
-            <th>Actions</th>
-        </tr>
+    <table class="tasks">
+        <thead>
+            <tr>
+                <th scope="col"><span class="visually-hidden">Done</span></th>
+                <th scope="col">Task</th>
+                <th scope="col">Due</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Added</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
         {% for task in tasks %}
             <tr class="{% if task.completed %}done{% elif task.is_overdue %}overdue{% elif task.is_due_today %}due-today{% endif %}">
-                <td>
+                <td class="cell-check">
                     <form action="{{ url_for('tasks.toggle', task_id=task.id, **view) }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="check"
-                                aria-label="Mark &quot;{{ task.content }}&quot; as {{ 'not done' if task.completed else 'done' }}">
-                            {{- '☑' if task.completed else '☐' -}}
-                        </button>
+                        <button type="submit" class="check" aria-pressed="{{ 'true' if task.completed else 'false' }}"
+                                aria-label="Mark &quot;{{ task.content }}&quot; as {{ 'not done' if task.completed else 'done' }}"></button>
                     </form>
                 </td>
                 <td class="task-text">{{ task.content }}</td>
-                <td class="due">
-                    {% if task.due_date %}
+                <td class="due" data-label="Due">
+                    {%- if task.due_date -%}
                         {{ task.due_date.isoformat() }}
-                        {% if task.is_overdue %}<span class="badge">Overdue</span>
-                        {% elif task.is_due_today %}<span class="badge">Today</span>{% endif %}
-                    {% else %}
+                        {%- if task.is_overdue %} <span class="badge">Overdue</span>
+                        {%- elif task.is_due_today %} <span class="badge">Today</span>{% endif %}
+                    {%- else -%}
                         &mdash;
-                    {% endif %}
+                    {%- endif -%}
                 </td>
-                <td class="priority priority-{{ task.priority }}">{{ task.priority_label }}</td>
-                <td> {{ task.date_created.date() }}</td>
-                <td>
-                    <a href="{{ url_for('tasks.update', task_id=task.id, **view) }}">Update</a>
+                <td class="priority priority-{{ task.priority }}" data-label="Priority">{{ task.priority_label }}</td>
+                <td class="added" data-label="Added">{{ task.date_created.date() }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('tasks.update', task_id=task.id, **view) }}"
+                       class="button button-quiet button-small">Edit</a>
                     <form action="{{ url_for('tasks.delete', task_id=task.id, **view) }}" method="POST" class="inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="link-button">Delete</button>
+                        <button type="submit" class="button button-quiet button-small button-danger">Delete</button>
                     </form>
                 </td>
             </tr>
-            {% endfor %}
-    </table><br>
+        {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
-        <div class="form1">
-            {% if error %}
-            <p class="error" role="alert">{{ error }}</p>
-            {% endif %}
-            <form action="{{ url_for('tasks.index', **view) }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% include '_task_fields.html' %}
-                <input type="submit" value="Add Task">
-            </form>
-        </div>
-</div>
+</section>
 {%endblock%}
