@@ -4,3 +4,9 @@
        required maxlength="{{ TASK_MAX_LENGTH }}">
 <label for="due_date">Due</label>
 <input type="date" name="due_date" id="due_date" value="{{ form.due_date }}">
+<label for="priority">Priority</label>
+<select name="priority" id="priority">
+    {% for value, label in PRIORITIES.items() %}
+    <option value="{{ value }}"{% if form.priority == value|string %} selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+</select>

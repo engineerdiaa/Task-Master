@@ -6,7 +6,7 @@ from flask_migrate import Migrate, upgrade
 from werkzeug.exceptions import HTTPException
 
 import tasks
-from models import TASK_MAX_LENGTH, db
+from models import db
 
 migrate = Migrate()
 
@@ -34,7 +34,6 @@ def create_app(test_config=None):
     migrate.init_app(app, db, directory=os.path.join(app.root_path, 'migrations'))
     app.register_blueprint(tasks.bp)
     app.register_error_handler(HTTPException, handle_http_error)
-    app.jinja_env.globals['TASK_MAX_LENGTH'] = TASK_MAX_LENGTH
 
     if app.config['AUTO_MIGRATE']:
         # Create the database tables, or bring an older database up to date.

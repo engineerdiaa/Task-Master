@@ -4,11 +4,56 @@ from flask import (Blueprint, abort, current_app, flash, redirect,
                    render_template, request, url_for)
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import TASK_MAX_LENGTH, Todo, db
+from models import DEFAULT_PRIORITY, PRIORITIES, TASK_MAX_LENGTH, Todo, db
 
 bp = Blueprint('tasks', __name__)
 
 TASK_NOT_FOUND = 'That task does not exist. It may have been deleted.'
+
+# Ways the list can be sorted: URL value -> (label, ORDER BY columns).
+# Every order ends with the id so tasks added at the same moment stay put.
+SORT_ORDERS = {
+    'added': ('Date added', (Todo.date_created, Todo.id)),
+    # Tasks without a due date go last.
+    'due': ('Due date', (Todo.due_date.is_(None), Todo.due_date, Todo.id)),
+    'priority': ('Priority', (Todo.priority.desc(), Todo.date_created, Todo.id)),
+}
+DEFAULT_SORT = 'added'
+
+
+@bp.context_processor
+def template_values():
+    return {
+        'view': view_args(),
+        'SORT_ORDERS': SORT_ORDERS,
+        'PRIORITIES': PRIORITIES,
+        'TASK_MAX_LENGTH': TASK_MAX_LENGTH,
+    }
+
+
+def view_args():
+    """The list options (such as the sort order) in the current URL.
+
+    Links and forms pass these along, so after adding, editing or deleting
+    a task the user comes back to the same view of their list. Unknown or
+    default values are left out.
+    """
+    args = {}
+    sort = request.args.get('sort')
+    if sort in SORT_ORDERS and sort != DEFAULT_SORT:
+        args['sort'] = sort
+    return args
+
+
+def back_to_list():
+    return redirect(url_for('tasks.index', **view_args()))
+
+
+def list_tasks():
+    """The tasks to show, in the order picked in the URL."""
+    sort = view_args().get('sort', DEFAULT_SORT)
+    _, order = SORT_ORDERS[sort]
+    return db.session.scalars(db.select(Todo).order_by(*order)).all()
 
 
 def read_task_form(form):
@@ -19,7 +64,8 @@ def read_task_form(form):
     """
     content = form.get('content', '').strip()
     due_text = form.get('due_date', '').strip()
-    values = {'content': content, 'due_date': None}
+    priority_text = form.get('priority', str(DEFAULT_PRIORITY))
+    values = {'content': content, 'due_date': None, 'priority': DEFAULT_PRIORITY}
 
     if not content:
         return values, "Task can't be empty."
@@ -30,12 +76,13 @@ def read_task_form(form):
             values['due_date'] = date.fromisoformat(due_text)
         except ValueError:
             return values, 'Due date must be a real date, like 2026-12-31.'
+    try:
+        values['priority'] = int(priority_text)
+    except ValueError:
+        values['priority'] = None
+    if values['priority'] not in PRIORITIES:
+        return values, 'Priority must be ' + ', '.join(PRIORITIES.values()) + '.'
     return values, None
-
-
-def all_tasks():
-    """Every task, oldest first."""
-    return db.session.scalars(db.select(Todo).order_by(Todo.date_created)).all()
 
 
 def save_changes(action):
@@ -55,16 +102,17 @@ def index():
     if request.method == 'POST':
         values, error = read_task_form(request.form)
         if error:
-            return render_template('index.html', tasks=all_tasks(), error=error,
+            return render_template('index.html', tasks=list_tasks(), error=error,
                                    form=request.form), 400
 
         new_task = Todo(**values)
         db.session.add(new_task)
         save_changes('add your task')
         flash('Task added.', 'success')
-        return redirect(url_for('tasks.index'))
+        return back_to_list()
 
-    return render_template('index.html', tasks=all_tasks(), form={})
+    form = {'priority': str(DEFAULT_PRIORITY)}
+    return render_template('index.html', tasks=list_tasks(), form=form)
 
 
 @bp.route('/toggle/<int:task_id>', methods=['POST'])
@@ -73,7 +121,7 @@ def toggle(task_id):
     task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
     task.completed = not task.completed
     save_changes('update that task')
-    return redirect(url_for('tasks.index'))
+    return back_to_list()
 
 
 @bp.route('/delete/<int:task_id>', methods=['POST'])
@@ -82,7 +130,7 @@ def delete(task_id):
     db.session.delete(task_to_delete)
     save_changes('delete that task')
     flash('Task deleted.', 'success')
-    return redirect(url_for('tasks.index'))
+    return back_to_list()
 
 
 @bp.route('/update/<int:task_id>', methods=['GET', 'POST'])
@@ -99,10 +147,11 @@ def update(task_id):
             setattr(task, field, value)
         save_changes('update your task')
         flash('Task updated.', 'success')
-        return redirect(url_for('tasks.index'))
+        return back_to_list()
 
     form = {
         'content': task.content,
         'due_date': task.due_date.isoformat() if task.due_date else '',
+        'priority': str(task.priority),
     }
     return render_template('update.html', task=task, form=form)

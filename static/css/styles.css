@@ -110,3 +110,18 @@ form.inline {
 .due-today .badge {
     background-color: #a15c00;
 }
+
+/* Sorting and priorities */
+.sort {
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+.priority-3 {
+    color: #b00020;
+    font-weight: bold;
+}
+
+.priority-1 {
+    color: #666;
+}

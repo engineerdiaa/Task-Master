@@ -7,6 +7,18 @@
 {%block body%}
 <div class="content">
     <h1>Task Master</h1>
+    <nav class="sort" aria-label="Sort tasks">
+        Sort by:
+        {% set current_sort = view.get('sort', 'added') %}
+        {% for key, (label, _) in SORT_ORDERS.items() %}
+            {% if key == current_sort %}
+            <strong aria-current="true">{{ label }}</strong>
+            {% else %}
+            <a href="{{ url_for('tasks.index', **dict(view, sort=key)) }}">{{ label }}</a>
+            {% endif %}
+            {% if not loop.last %}|{% endif %}
+        {% endfor %}
+    </nav>
     {% if tasks|length < 1 %}
     <h4>There are no tasks create one below</h4>
     {% else %}
@@ -15,13 +27,14 @@
             <th>Done</th>
             <th>Task</th>
             <th>Due</th>
+            <th>Priority</th>
             <th>Added</th>
             <th>Actions</th>
         </tr>
         {% for task in tasks %}
             <tr class="{% if task.completed %}done{% elif task.is_overdue %}overdue{% elif task.is_due_today %}due-today{% endif %}">
                 <td>
-                    <form action="{{ url_for('tasks.toggle', task_id=task.id) }}" method="POST">
+                    <form action="{{ url_for('tasks.toggle', task_id=task.id, **view) }}" method="POST">
                         <button type="submit" class="check"
                                 aria-label="Mark &quot;{{ task.content }}&quot; as {{ 'not done' if task.completed else 'done' }}">
                             {{- '☑' if task.completed else '☐' -}}
@@ -38,10 +51,11 @@
                         &mdash;
                     {% endif %}
                 </td>
+                <td class="priority priority-{{ task.priority }}">{{ task.priority_label }}</td>
                 <td> {{ task.date_created.date() }}</td>
                 <td>
-                    <a href="{{ url_for('tasks.update', task_id=task.id) }}">Update</a>
-                    <form action="{{ url_for('tasks.delete', task_id=task.id) }}" method="POST" class="inline">
+                    <a href="{{ url_for('tasks.update', task_id=task.id, **view) }}">Update</a>
+                    <form action="{{ url_for('tasks.delete', task_id=task.id, **view) }}" method="POST" class="inline">
                         <button type="submit" class="link-button">Delete</button>
                     </form>
                 </td>
@@ -53,7 +67,7 @@
             {% if error %}
             <p class="error" role="alert">{{ error }}</p>
             {% endif %}
-            <form action="{{ url_for('tasks.index') }}" method="POST">
+            <form action="{{ url_for('tasks.index', **view) }}" method="POST">
                 {% include '_task_fields.html' %}
                 <input type="submit" value="Add Task">
             </form>

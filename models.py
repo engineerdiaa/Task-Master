@@ -6,6 +6,10 @@ db = SQLAlchemy()
 
 TASK_MAX_LENGTH = 200
 
+# Stored as numbers so tasks can be sorted by priority.
+PRIORITIES = {1: 'Low', 2: 'Medium', 3: 'High'}
+DEFAULT_PRIORITY = 2
+
 
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -14,6 +18,12 @@ class Todo(db.Model):
     completed = db.Column(db.Boolean, nullable=False, default=False,
                           server_default=db.false())
     due_date = db.Column(db.Date)
+    priority = db.Column(db.Integer, nullable=False, default=DEFAULT_PRIORITY,
+                         server_default=str(DEFAULT_PRIORITY))
+
+    @property
+    def priority_label(self):
+        return PRIORITIES.get(self.priority, 'Unknown')
 
     @property
     def is_overdue(self):
