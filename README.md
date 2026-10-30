@@ -98,8 +98,25 @@ tasks.py            Pages and actions for tasks (Flask blueprint)
 migrations/         Database migrations (Flask-Migrate / Alembic)
 templates/          HTML templates (Jinja)
 static/css/         Stylesheet
+tests/              Automated tests (pytest)
 requirements.txt    Python packages the app needs
+requirements-dev.txt  Extra packages for running the tests
 ```
+
+## Running the tests
+
+Install the test tools once, then run `pytest` from the project folder:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Each test uses its own temporary database, so your tasks are never touched.
+The tests cover adding, editing, ticking and deleting tasks, form checks, due
+dates, priorities, sorting, filtering and search, accounts and privacy between
+users, CSRF protection, error pages and the database migrations. They also fail
+if a model in `models.py` is changed without a matching migration.
 
 ## Security notes
 
