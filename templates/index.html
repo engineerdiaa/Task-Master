@@ -21,8 +21,8 @@
                 <td>{{ task.content }}</td>
                 <td> {{ task.date_created.date() }}</td>
                 <td>
-                    <a href="/update/{{task.id}}">Update</a>
-                    <form action="/delete/{{task.id}}" method="POST" class="inline">
+                    <a href="{{ url_for('tasks.update', task_id=task.id) }}">Update</a>
+                    <form action="{{ url_for('tasks.delete', task_id=task.id) }}" method="POST" class="inline">
                         <button type="submit" class="link-button">Delete</button>
                     </form>
                 </td>
@@ -34,7 +34,7 @@
             {% if error %}
             <p class="error" role="alert">{{ error }}</p>
             {% endif %}
-            <form action="/" method="POST">
+            <form action="{{ url_for('tasks.index') }}" method="POST">
                 <input type="text" name="content" id="content" value="{{ content or '' }}"
                        required maxlength="{{ TASK_MAX_LENGTH }}">
                 <input type="submit" value="Add Task">

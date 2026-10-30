@@ -1,4 +1,5 @@
-from flask import Blueprint, abort, current_app, redirect, render_template, request
+from flask import (Blueprint, abort, current_app, redirect, render_template,
+                   request, url_for)
 from sqlalchemy.exc import SQLAlchemyError
 
 from models import TASK_MAX_LENGTH, Todo, db
@@ -46,22 +47,22 @@ def index():
         new_task = Todo(content=task_content)
         db.session.add(new_task)
         save_changes('add your task')
-        return redirect('/')
+        return redirect(url_for('tasks.index'))
 
     return render_template('index.html', tasks=all_tasks())
 
 
-@bp.route('/delete/<int:id>', methods=['POST'])
-def delete(id):
-    task_to_delete = db.get_or_404(Todo, id, description=TASK_NOT_FOUND)
+@bp.route('/delete/<int:task_id>', methods=['POST'])
+def delete(task_id):
+    task_to_delete = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
     db.session.delete(task_to_delete)
     save_changes('delete that task')
-    return redirect('/')
+    return redirect(url_for('tasks.index'))
 
 
-@bp.route('/update/<int:id>', methods=['GET', 'POST'])
-def update(id):
-    task = db.get_or_404(Todo, id, description=TASK_NOT_FOUND)
+@bp.route('/update/<int:task_id>', methods=['GET', 'POST'])
+def update(task_id):
+    task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
 
     if request.method == 'POST':
         content, error = clean_content(request.form.get('content', ''))
@@ -71,6 +72,6 @@ def update(id):
 
         task.content = content
         save_changes('update your task')
-        return redirect('/')
+        return redirect(url_for('tasks.index'))
 
     return render_template('update.html', task=task, content=task.content)
