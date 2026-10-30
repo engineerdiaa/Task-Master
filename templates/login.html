@@ -1,0 +1,28 @@
+{%extends 'base.html'%}
+
+{%block head%}
+<title>Log in - Task Master</title>
+{%endblock%}
+
+{%block body%}
+<div class="content">
+    <h1>Log in</h1>
+    <div class="form1">
+        {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
+        <form action="{{ url_for('auth.login', next=next_url) }}" method="POST" class="stacked">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="username">Username</label>
+            <input type="text" name="username" id="username" value="{{ username }}"
+                   autocomplete="username" required autofocus>
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password"
+                   autocomplete="current-password" required>
+            <label class="checkbox"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
+            <input type="submit" value="Log in">
+        </form>
+        <p>New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+    </div>
+</div>
+{%endblock%}

@@ -1,10 +1,11 @@
 from datetime import date
 
-from flask import (Blueprint, abort, current_app, flash, redirect,
-                   render_template, request, url_for)
-from sqlalchemy.exc import SQLAlchemyError
+from flask import (Blueprint, abort, flash, redirect, render_template,
+                   request, url_for)
+from flask_login import current_user, login_required
 
-from models import DEFAULT_PRIORITY, PRIORITIES, TASK_MAX_LENGTH, Todo, db
+from models import (DEFAULT_PRIORITY, PRIORITIES, TASK_MAX_LENGTH, Todo, db,
+                    save_changes)
 
 bp = Blueprint('tasks', __name__)
 
@@ -27,6 +28,12 @@ STATUS_FILTERS = {
     'done': ('Done', Todo.completed.is_(True)),
 }
 DEFAULT_STATUS = 'all'
+
+
+@bp.before_request
+@login_required
+def require_login():
+    """Every task page needs a logged-in user."""
 
 
 @bp.context_processor
@@ -70,13 +77,22 @@ def list_tasks():
     _, order = SORT_ORDERS[view.get('sort', DEFAULT_SORT)]
     _, condition = STATUS_FILTERS[view.get('status', DEFAULT_STATUS)]
 
-    query = db.select(Todo).order_by(*order)
+    query = db.select(Todo).filter_by(user_id=current_user.id).order_by(*order)
     if condition is not None:
         query = query.where(condition)
     if 'q' in view:
         # autoescape makes % and _ in the search match literally.
         query = query.where(Todo.content.icontains(view['q'], autoescape=True))
     return db.session.scalars(query).all()
+
+
+def get_own_task_or_404(task_id):
+    """The current user's task with this id. Other people's tasks get the
+    same 404 as missing ones, so their ids reveal nothing."""
+    task = db.session.get(Todo, task_id)
+    if task is None or task.user_id != current_user.id:
+        abort(404, description=TASK_NOT_FOUND)
+    return task
 
 
 def read_task_form(form):
@@ -108,18 +124,6 @@ def read_task_form(form):
     return values, None
 
 
-def save_changes(action):
-    """Commit the session. If the database fails, undo the changes and
-    show an error page that says what couldn't be done."""
-    try:
-        db.session.commit()
-    except SQLAlchemyError:
-        db.session.rollback()
-        current_app.logger.exception('Database error while trying to %s', action)
-        abort(500, description=f'There was a problem trying to {action}. '
-                               'Please try again.')
-
-
 @bp.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -128,7 +132,7 @@ def index():
             return render_template('index.html', tasks=list_tasks(), error=error,
                                    form=request.form), 400
 
-        new_task = Todo(**values)
+        new_task = Todo(**values, user_id=current_user.id)
         db.session.add(new_task)
         save_changes('add your task')
         flash('Task added.', 'success')
@@ -141,7 +145,7 @@ def index():
 @bp.route('/toggle/<int:task_id>', methods=['POST'])
 def toggle(task_id):
     """Mark a task as done, or as not done if it already was."""
-    task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
+    task = get_own_task_or_404(task_id)
     task.completed = not task.completed
     save_changes('update that task')
     return back_to_list()
@@ -149,7 +153,7 @@ def toggle(task_id):
 
 @bp.route('/delete/<int:task_id>', methods=['POST'])
 def delete(task_id):
-    task_to_delete = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
+    task_to_delete = get_own_task_or_404(task_id)
     db.session.delete(task_to_delete)
     save_changes('delete that task')
     flash('Task deleted.', 'success')
@@ -158,7 +162,7 @@ def delete(task_id):
 
 @bp.route('/update/<int:task_id>', methods=['GET', 'POST'])
 def update(task_id):
-    task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
+    task = get_own_task_or_404(task_id)
 
     if request.method == 'POST':
         values, error = read_task_form(request.form)

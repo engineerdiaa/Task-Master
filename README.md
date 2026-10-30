@@ -6,6 +6,7 @@ stored in a SQLite database.
 
 ## Features
 
+- User accounts: sign up, log in and out; everyone sees only their own tasks
 - Add, edit and delete tasks (1–200 characters; blank tasks are rejected)
 - Mark tasks as done (and undo it); done tasks are crossed out
 - Optional due dates: overdue tasks are shown in red, tasks due today are tagged
@@ -39,7 +40,10 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open <http://127.0.0.1:5000> in your browser.
+Then open <http://127.0.0.1:5000> in your browser and create an account.
+
+If you used the app before accounts were added, your existing tasks are given
+to the first account that is created.
 
 The database is created automatically the first time the app starts, at
 `instance/test.db`. To start over with an empty list, stop the app and delete
@@ -88,13 +92,24 @@ saved in `instance/secret_key` (which is not in git). To use your own, set
 
 ```
 app.py              Creates and configures the Flask app (create_app)
-models.py           Database model (Todo)
+models.py           Database models (User, Todo)
+auth.py             Sign up, log in and log out (Flask blueprint)
 tasks.py            Pages and actions for tasks (Flask blueprint)
 migrations/         Database migrations (Flask-Migrate / Alembic)
 templates/          HTML templates (Jinja)
 static/css/         Stylesheet
 requirements.txt    Python packages the app needs
 ```
+
+## Security notes
+
+- Passwords are stored only as salted hashes (Werkzeug's scrypt), never as
+  plain text.
+- Every form that changes data includes a CSRF token
+  ([Flask-WTF](https://flask-wtf.readthedocs.io/)), so other websites can't
+  submit forms on a logged-in user's behalf.
+- Asking for another user's task gives the same "not found" page as a task
+  that doesn't exist.
 
 ## Changing the database
 

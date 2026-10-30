@@ -61,6 +61,7 @@
             <tr class="{% if task.completed %}done{% elif task.is_overdue %}overdue{% elif task.is_due_today %}due-today{% endif %}">
                 <td>
                     <form action="{{ url_for('tasks.toggle', task_id=task.id, **view) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="check"
                                 aria-label="Mark &quot;{{ task.content }}&quot; as {{ 'not done' if task.completed else 'done' }}">
                             {{- '☑' if task.completed else '☐' -}}
@@ -82,6 +83,7 @@
                 <td>
                     <a href="{{ url_for('tasks.update', task_id=task.id, **view) }}">Update</a>
                     <form action="{{ url_for('tasks.delete', task_id=task.id, **view) }}" method="POST" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="link-button">Delete</button>
                     </form>
                 </td>
@@ -94,6 +96,7 @@
             <p class="error" role="alert">{{ error }}</p>
             {% endif %}
             <form action="{{ url_for('tasks.index', **view) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 {% include '_task_fields.html' %}
                 <input type="submit" value="Add Task">
             </form>

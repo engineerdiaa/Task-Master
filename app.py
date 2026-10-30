@@ -3,12 +3,17 @@ import secrets
 
 from flask import Flask, render_template
 from flask_migrate import Migrate, upgrade
+from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.exceptions import HTTPException
 
+import auth
 import tasks
 from models import db
 
 migrate = Migrate()
+# Every POST form must include a csrf_token field, so other websites
+# can't submit forms on a logged-in user's behalf.
+csrf = CSRFProtect()
 
 
 def create_app(test_config=None):
@@ -32,8 +37,12 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate.init_app(app, db, directory=os.path.join(app.root_path, 'migrations'))
+    csrf.init_app(app)
+    auth.login_manager.init_app(app)
+    app.register_blueprint(auth.bp)
     app.register_blueprint(tasks.bp)
     app.register_error_handler(HTTPException, handle_http_error)
+    app.register_error_handler(CSRFError, handle_csrf_error)
 
     if app.config['AUTO_MIGRATE']:
         # Create the database tables, or bring an older database up to date.
@@ -45,8 +54,8 @@ def create_app(test_config=None):
 
 def instance_secret_key(app):
     """Return a random secret key saved in the instance folder, creating it
-    the first time. The key signs the session cookie (used for messages
-    like "Task added"), so it must stay private: instance/ is not in git."""
+    the first time. The key signs the session cookie, which holds who is
+    logged in, so it must stay private: instance/ is not in git."""
     path = os.path.join(app.instance_path, 'secret_key')
     if os.path.exists(path):
         with open(path) as f:
@@ -61,6 +70,12 @@ def instance_secret_key(app):
 
 def handle_http_error(error):
     return render_template('error.html', error=error), error.code
+
+
+def handle_csrf_error(error):
+    error.description = ('This form has expired or was sent from another site. '
+                         'Go back, reload the page and try again.')
+    return handle_http_error(error)
 
 
 if __name__ == '__main__':

@@ -7,6 +7,15 @@
     {%block head%}{%endblock%}
 </head>
 <body>
+{% if current_user.is_authenticated %}
+<header class="account">
+    Signed in as <strong>{{ current_user.username }}</strong>
+    <form action="{{ url_for('auth.logout') }}" method="POST" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="link-button">Log out</button>
+    </form>
+</header>
+{% endif %}
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 <div class="flashes">

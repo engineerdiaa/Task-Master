@@ -131,3 +131,26 @@ form.inline {
 .cancel {
     margin-left: 0.5em;
 }
+
+/* Account bar, login and registration */
+.account {
+    text-align: right;
+    padding: 0.5em 1em;
+}
+
+form.stacked {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3em;
+    text-align: left;
+    min-width: 16em;
+}
+
+form.stacked input[type=submit] {
+    margin-top: 0.5em;
+}
+
+.flash-info {
+    background-color: #e3f0ff;
+    border: 1px solid #1f5fa8;
+}
