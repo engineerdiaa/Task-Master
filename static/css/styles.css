@@ -111,7 +111,9 @@ form.inline {
     background-color: #a15c00;
 }
 
-/* Sorting and priorities */
+/* Filtering, searching, sorting and priorities */
+.filters,
+.search,
 .sort {
     text-align: center;
     margin-bottom: 1em;

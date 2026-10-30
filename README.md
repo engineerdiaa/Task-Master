@@ -10,6 +10,7 @@ stored in a SQLite database.
 - Mark tasks as done (and undo it); done tasks are crossed out
 - Optional due dates: overdue tasks are shown in red, tasks due today are tagged
 - Priority (Low, Medium, High) for each task
+- Show all, active or done tasks, and search them by text
 - Sort the list by date added, due date or priority
 - See when each task was added
 - Confirmation messages after adding, editing or deleting a task

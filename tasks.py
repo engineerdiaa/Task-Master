@@ -20,19 +20,28 @@ SORT_ORDERS = {
 }
 DEFAULT_SORT = 'added'
 
+# Which tasks to show: URL value -> (label, WHERE condition or None).
+STATUS_FILTERS = {
+    'all': ('All', None),
+    'active': ('Active', Todo.completed.is_(False)),
+    'done': ('Done', Todo.completed.is_(True)),
+}
+DEFAULT_STATUS = 'all'
+
 
 @bp.context_processor
 def template_values():
     return {
         'view': view_args(),
         'SORT_ORDERS': SORT_ORDERS,
+        'STATUS_FILTERS': STATUS_FILTERS,
         'PRIORITIES': PRIORITIES,
         'TASK_MAX_LENGTH': TASK_MAX_LENGTH,
     }
 
 
 def view_args():
-    """The list options (such as the sort order) in the current URL.
+    """The list options (sort order, filter, search) in the current URL.
 
     Links and forms pass these along, so after adding, editing or deleting
     a task the user comes back to the same view of their list. Unknown or
@@ -42,6 +51,12 @@ def view_args():
     sort = request.args.get('sort')
     if sort in SORT_ORDERS and sort != DEFAULT_SORT:
         args['sort'] = sort
+    status = request.args.get('status')
+    if status in STATUS_FILTERS and status != DEFAULT_STATUS:
+        args['status'] = status
+    search = request.args.get('q', '').strip()[:TASK_MAX_LENGTH]
+    if search:
+        args['q'] = search
     return args
 
 
@@ -50,10 +65,18 @@ def back_to_list():
 
 
 def list_tasks():
-    """The tasks to show, in the order picked in the URL."""
-    sort = view_args().get('sort', DEFAULT_SORT)
-    _, order = SORT_ORDERS[sort]
-    return db.session.scalars(db.select(Todo).order_by(*order)).all()
+    """The tasks to show, filtered and sorted as picked in the URL."""
+    view = view_args()
+    _, order = SORT_ORDERS[view.get('sort', DEFAULT_SORT)]
+    _, condition = STATUS_FILTERS[view.get('status', DEFAULT_STATUS)]
+
+    query = db.select(Todo).order_by(*order)
+    if condition is not None:
+        query = query.where(condition)
+    if 'q' in view:
+        # autoescape makes % and _ in the search match literally.
+        query = query.where(Todo.content.icontains(view['q'], autoescape=True))
+    return db.session.scalars(query).all()
 
 
 def read_task_form(form):
