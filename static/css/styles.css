@@ -49,3 +49,7 @@ form.inline {
     font: inherit;
     cursor: pointer;
 }
+
+.message {
+    text-align: center;
+}

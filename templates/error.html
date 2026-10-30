@@ -1,0 +1,13 @@
+{%extends 'base.html'%}
+
+{%block head%}
+<title>{{ error.code }} {{ error.name }} - Task Master</title>
+{%endblock%}
+
+{%block body%}
+<div class="content">
+    <h1>{{ error.code }} {{ error.name }}</h1>
+    <p class="message">{{ error.description }}</p>
+    <p class="message"><a href="/">Back to your tasks</a></p>
+</div>
+{%endblock%}
