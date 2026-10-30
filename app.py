@@ -1,10 +1,12 @@
 import os
+import re
 import secrets
 
 from flask import Flask, render_template
 from flask_migrate import Migrate, upgrade
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import auth
 import tasks
@@ -20,20 +22,27 @@ def create_app(test_config=None):
     """Create and configure the app.
 
     Any setting can be changed with an environment variable that starts
-    with FLASK_, for example FLASK_DEBUG=1. Tests pass their own settings
-    in test_config.
+    with FLASK_, for example FLASK_DEBUG=1. The database can also be set
+    with DATABASE_URL, as hosting services do. Tests pass their own
+    settings in test_config.
     """
     app = Flask(__name__)
     app.config.from_mapping(
-        SQLALCHEMY_DATABASE_URI='sqlite:///test.db',
+        SQLALCHEMY_DATABASE_URI=database_url_from_env() or 'sqlite:///test.db',
         # Bring the database up to date every time the app starts.
         AUTO_MIGRATE=True,
+        # Set when a hosting service's proxy sits in front of the app.
+        BEHIND_PROXY=False,
     )
     app.config.from_prefixed_env()
     if test_config:
         app.config.update(test_config)
     if not app.config['SECRET_KEY']:
         app.config['SECRET_KEY'] = instance_secret_key(app)
+    if app.config['BEHIND_PROXY']:
+        # The proxy handles HTTPS and passes the visitor's details in
+        # X-Forwarded-* headers; trust one proxy's worth of them.
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
     db.init_app(app)
     migrate.init_app(app, db, directory=os.path.join(app.root_path, 'migrations'))
@@ -50,6 +59,19 @@ def create_app(test_config=None):
             upgrade()
 
     return app
+
+
+def database_url_from_env():
+    """Return DATABASE_URL, ready for SQLAlchemy, or None if it isn't set.
+
+    Hosting services give PostgreSQL URLs starting with postgres:// or
+    postgresql://; SQLAlchemy needs postgresql+psycopg:// to use the
+    psycopg (version 3) driver.
+    """
+    url = os.environ.get('DATABASE_URL')
+    if not url:
+        return None
+    return re.sub(r'^postgres(ql)?://', 'postgresql+psycopg://', url)
 
 
 def instance_secret_key(app):

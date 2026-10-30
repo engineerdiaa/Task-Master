@@ -91,6 +91,15 @@ The secret key that signs the session cookie is created automatically and
 saved in `instance/secret_key` (which is not in git). To use your own, set
 `FLASK_SECRET_KEY`.
 
+Other settings:
+
+| Variable | What it does |
+| --- | --- |
+| `DATABASE_URL` | Database to use instead of the SQLite file, e.g. a PostgreSQL URL from a hosting service (`postgres://...` works) |
+| `FLASK_AUTO_MIGRATE` | `false` stops the app upgrading the database when it starts |
+| `FLASK_BEHIND_PROXY` | `true` when a hosting service's proxy sits in front of the app |
+| `FLASK_SESSION_COOKIE_SECURE`, `FLASK_REMEMBER_COOKIE_SECURE` | `true` to send login cookies over HTTPS only |
+
 ## Project layout
 
 ```
@@ -102,6 +111,7 @@ migrations/         Database migrations (Flask-Migrate / Alembic)
 templates/          HTML templates (Jinja)
 static/css/         Stylesheet
 tests/              Automated tests (pytest)
+render.yaml         Deployment settings for Render
 requirements.txt    Python packages the app needs
 requirements-dev.txt  Extra packages for running the tests
 ```
@@ -121,9 +131,43 @@ dates, priorities, sorting, filtering and search, accounts and privacy between
 users, CSRF protection, error pages and the database migrations. They also fail
 if a model in `models.py` is changed without a matching migration.
 
-GitHub Actions runs the same tests on every push and pull request, on Linux
-(Python 3.12 and 3.13) and Windows (Python 3.12). See the **Actions** tab on
-GitHub for the results.
+`tests/test_postgres.py` runs the main features against a real PostgreSQL
+database. It is skipped unless you point it at an empty one:
+
+```bash
+TEST_DATABASE_URL=postgresql://user:password@localhost/taskmaster pytest
+```
+
+GitHub Actions runs the tests on every push and pull request, on Linux
+(Python 3.12 and 3.13), Windows (Python 3.12) and against PostgreSQL. See the
+**Actions** tab on GitHub for the results.
+
+## Deploying to Render
+
+The repository includes a [Render](https://render.com) Blueprint,
+`render.yaml`, that creates the web app and a PostgreSQL database for it.
+
+1. Sign in to Render with your GitHub account.
+2. Choose **New > Blueprint** and pick this repository (and the branch you want
+   to deploy).
+3. Check the two resources it lists, `task-master` and `task-master-db`, and
+   click **Deploy**.
+4. When the deploy finishes, open the `onrender.com` address Render shows and
+   create your account.
+
+What the Blueprint sets up:
+
+- The app runs with [Gunicorn](https://gunicorn.org/), a production web
+  server, instead of Flask's development server.
+- Tasks are stored in PostgreSQL. Render's web servers lose their files when
+  they restart, so a SQLite file would be wiped.
+- `FLASK_SECRET_KEY` is a random value Render generates and keeps secret.
+- Login cookies are only sent over HTTPS.
+- The database is upgraded automatically each time the app starts.
+
+Render's free plans have limits (for example, free web services go to sleep
+when unused, and free databases may expire). Check Render's pricing page for
+the current details before relying on it for important data.
 
 ## Security notes
 

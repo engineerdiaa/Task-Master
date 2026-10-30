@@ -14,7 +14,10 @@ Jinja2==3.1.6
 Mako==1.4.3
 MarkupSafe==3.0.3
 packaging==25.0
+psycopg==3.3.6
+psycopg-binary==3.3.6
 SQLAlchemy==2.0.45
 typing_extensions==4.15.0
+tzdata==2026.6; sys_platform == "win32"
 Werkzeug==3.1.4
 WTForms==3.3.1

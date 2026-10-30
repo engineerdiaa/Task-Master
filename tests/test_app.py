@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 import sqlalchemy as sa
+from flask import request
 from flask_migrate import check, downgrade, upgrade
 
 from app import instance_secret_key
@@ -27,6 +28,28 @@ def test_settings_from_environment(make_app, monkeypatch):
     monkeypatch.setenv('FLASK_SECRET_KEY', 'from-the-environment')
     app = make_app(SECRET_KEY=None)
     assert app.config['SECRET_KEY'] == 'from-the-environment'
+
+
+@pytest.mark.parametrize('database_url', [
+    'postgres://user:secret@db.example.com:5432/tasks',
+    'postgresql://user:secret@db.example.com:5432/tasks',
+])
+def test_database_url_from_hosting_service(make_app, monkeypatch, database_url):
+    monkeypatch.setenv('DATABASE_URL', database_url)
+    app = make_app(SQLALCHEMY_DATABASE_URI=None, AUTO_MIGRATE=False)
+    assert (app.config['SQLALCHEMY_DATABASE_URI']
+            == 'postgresql+psycopg://user:secret@db.example.com:5432/tasks')
+
+
+def test_proxy_headers_trusted_only_when_asked(make_app):
+    def scheme_seen_by(app):
+        seen = []
+        app.before_request(lambda: seen.append(request.scheme))
+        app.test_client().get('/login', headers={'X-Forwarded-Proto': 'https'})
+        return seen[0]
+
+    assert scheme_seen_by(make_app()) == 'http'
+    assert scheme_seen_by(make_app('proxy.db', BEHIND_PROXY=True)) == 'https'
 
 
 def test_secret_key_is_created_once_and_reused(tmp_path):
