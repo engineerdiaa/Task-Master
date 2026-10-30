@@ -4,7 +4,7 @@
 
 A small to-do list web app built with [Flask](https://flask.palletsprojects.com/)
 and [Flask-SQLAlchemy](https://flask-sqlalchemy.readthedocs.io/). Tasks are
-stored in a SQLite database.
+stored in a SQLite file on your computer, or in PostgreSQL when deployed.
 
 ## Features
 
@@ -16,8 +16,8 @@ stored in a SQLite database.
 - Show all, active or done tasks, and search them by text
 - Sort the list by date added, due date or priority
 - See when each task was added
-- Clean, responsive design that works on phones, with automatic dark mode
 - Confirmation messages after adding, editing or deleting a task
+- Clean, responsive design that works on phones, with automatic dark mode
 
 ## Requirements
 
