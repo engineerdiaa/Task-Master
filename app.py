@@ -1,10 +1,17 @@
+import os
+
 from flask import Flask, render_template, request, redirect
-from flask_sqlalchemy import SQLAlchemy 
+from flask_migrate import Migrate, upgrade
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+# render_as_batch lets migrations change columns on SQLite, which has
+# limited ALTER TABLE support.
+migrate = Migrate(app, db, directory=os.path.join(app.root_path, 'migrations'),
+                  render_as_batch=True)
 
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +65,10 @@ def update(id):
     else:
         return render_template('update.html', task=task)
 
+
+# Create the database tables, or bring an older database up to date.
+with app.app_context():
+    upgrade()
 
 
 if __name__ == "__main__":
