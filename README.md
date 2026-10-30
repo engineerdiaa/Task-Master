@@ -1,5 +1,7 @@
 # Task Master
 
+[![Tests](https://github.com/engineerdiaa/Task-Master/actions/workflows/tests.yml/badge.svg)](https://github.com/engineerdiaa/Task-Master/actions/workflows/tests.yml)
+
 A small to-do list web app built with [Flask](https://flask.palletsprojects.com/)
 and [Flask-SQLAlchemy](https://flask-sqlalchemy.readthedocs.io/). Tasks are
 stored in a SQLite database.
@@ -117,6 +119,10 @@ The tests cover adding, editing, ticking and deleting tasks, form checks, due
 dates, priorities, sorting, filtering and search, accounts and privacy between
 users, CSRF protection, error pages and the database migrations. They also fail
 if a model in `models.py` is changed without a matching migration.
+
+GitHub Actions runs the same tests on every push and pull request, on Linux
+(Python 3.12 and 3.13) and Windows (Python 3.12). See the **Actions** tab on
+GitHub for the results.
 
 ## Security notes
 
