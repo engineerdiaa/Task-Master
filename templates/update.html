@@ -10,8 +10,13 @@
 
 <br>
     <div class="form1">
+        {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
         <form action="/update/{{task.id}}" method="POST">
-            <input type="text" name="content" id="content" value="{{task.content}}">
+            <input type="text" name="content" id="content"
+                   value="{{ content }}"
+                   required maxlength="{{ TASK_MAX_LENGTH }}">
             <input type="submit" value="Update">
         </form>
     </div>

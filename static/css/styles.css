@@ -29,3 +29,8 @@ td {
     text-align: left;
     padding: 8px;
 }
+
+.error {
+    color: #b00020;
+    font-weight: bold;
+}

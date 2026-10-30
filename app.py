@@ -13,18 +13,35 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db, directory=os.path.join(app.root_path, 'migrations'),
                   render_as_batch=True)
 
+TASK_MAX_LENGTH = 200
+app.jinja_env.globals['TASK_MAX_LENGTH'] = TASK_MAX_LENGTH
+
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.String(TASK_MAX_LENGTH), nullable=False)
     date_created= db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Task %r>' % self.id
 
+def clean_content(raw):
+    """Return (content, error) for the text typed into a task form."""
+    content = raw.strip()
+    if not content:
+        return content, "Task can't be empty."
+    if len(content) > TASK_MAX_LENGTH:
+        return content, f'Task must be {TASK_MAX_LENGTH} characters or fewer.'
+    return content, None
+
 @app.route('/', methods= ['POST', 'GET'])
 def index():
     if request.method == 'POST':
-        task_content = request.form['content']
+        task_content, error = clean_content(request.form.get('content', ''))
+        if error:
+            tasks = Todo.query.order_by(Todo.date_created).all()
+            return render_template('index.html', tasks=tasks, error=error,
+                                   content=task_content), 400
+
         new_task = Todo(content=task_content)
 
         try:
@@ -54,7 +71,12 @@ def update(id):
     task = Todo.query.get_or_404(id)
 
     if request.method == 'POST':
-        task.content = request.form['content']
+        content, error = clean_content(request.form.get('content', ''))
+        if error:
+            return render_template('update.html', task=task, error=error,
+                                   content=content), 400
+
+        task.content = content
 
         try:
             db.session.commit()
@@ -63,7 +85,7 @@ def update(id):
         except:
             return 'there was an issue updating your task'
     else:
-        return render_template('update.html', task=task)
+        return render_template('update.html', task=task, content=task.content)
 
 
 # Create the database tables, or bring an older database up to date.

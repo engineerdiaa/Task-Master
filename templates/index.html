@@ -30,8 +30,12 @@
     </table><br>
     {% endif %}
         <div class="form1">
+            {% if error %}
+            <p class="error" role="alert">{{ error }}</p>
+            {% endif %}
             <form action="/" method="POST">
-                <input type="text" name="content" id="content">
+                <input type="text" name="content" id="content" value="{{ content or '' }}"
+                       required maxlength="{{ TASK_MAX_LENGTH }}">
                 <input type="submit" value="Add Task">
             </form>
         </div>
