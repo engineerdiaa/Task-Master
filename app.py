@@ -36,6 +36,10 @@ def clean_content(raw):
         return content, f'Task must be {TASK_MAX_LENGTH} characters or fewer.'
     return content, None
 
+def all_tasks():
+    """Every task, oldest first."""
+    return db.session.scalars(db.select(Todo).order_by(Todo.date_created)).all()
+
 def save_changes(action):
     """Commit the session. If the database fails, undo the changes and
     show an error page that says what couldn't be done."""
@@ -56,8 +60,7 @@ def index():
     if request.method == 'POST':
         task_content, error = clean_content(request.form.get('content', ''))
         if error:
-            tasks = Todo.query.order_by(Todo.date_created).all()
-            return render_template('index.html', tasks=tasks, error=error,
+            return render_template('index.html', tasks=all_tasks(), error=error,
                                    content=task_content), 400
 
         new_task = Todo(content=task_content)
@@ -66,19 +69,18 @@ def index():
         return redirect('/')
 
     else:
-        tasks = Todo.query.order_by(Todo.date_created).all()
-        return render_template('index.html', tasks = tasks)
+        return render_template('index.html', tasks=all_tasks())
     
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete(id):
-    task_to_delete = Todo.query.get_or_404(id, description=TASK_NOT_FOUND)
+    task_to_delete = db.get_or_404(Todo, id, description=TASK_NOT_FOUND)
     db.session.delete(task_to_delete)
     save_changes('delete that task')
     return redirect('/')
 
 @app.route('/update/<int:id>', methods=['GET', 'post'])
 def update(id):
-    task = Todo.query.get_or_404(id, description=TASK_NOT_FOUND)
+    task = db.get_or_404(Todo, id, description=TASK_NOT_FOUND)
 
     if request.method == 'POST':
         content, error = clean_content(request.form.get('content', ''))
