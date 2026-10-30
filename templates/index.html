@@ -12,13 +12,22 @@
     {% else %}
     <table>
         <tr>
+            <th>Done</th>
             <th>Task</th>
             <th>Added</th>
             <th>Actions</th>
         </tr>
         {% for task in tasks %}
-            <tr>
-                <td>{{ task.content }}</td>
+            <tr{% if task.completed %} class="done"{% endif %}>
+                <td>
+                    <form action="{{ url_for('tasks.toggle', task_id=task.id) }}" method="POST">
+                        <button type="submit" class="check"
+                                aria-label="Mark &quot;{{ task.content }}&quot; as {{ 'not done' if task.completed else 'done' }}">
+                            {{- '☑' if task.completed else '☐' -}}
+                        </button>
+                    </form>
+                </td>
+                <td class="task-text">{{ task.content }}</td>
                 <td> {{ task.date_created.date() }}</td>
                 <td>
                     <a href="{{ url_for('tasks.update', task_id=task.id) }}">Update</a>

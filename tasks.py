@@ -52,6 +52,15 @@ def index():
     return render_template('index.html', tasks=all_tasks())
 
 
+@bp.route('/toggle/<int:task_id>', methods=['POST'])
+def toggle(task_id):
+    """Mark a task as done, or as not done if it already was."""
+    task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
+    task.completed = not task.completed
+    save_changes('update that task')
+    return redirect(url_for('tasks.index'))
+
+
 @bp.route('/delete/<int:task_id>', methods=['POST'])
 def delete(task_id):
     task_to_delete = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)

@@ -7,6 +7,7 @@ stored in a SQLite database.
 ## Features
 
 - Add, edit and delete tasks (1–200 characters; blank tasks are rejected)
+- Mark tasks as done (and undo it); done tasks are crossed out
 - See when each task was added
 
 ## Requirements

@@ -53,3 +53,18 @@ form.inline {
 .message {
     text-align: center;
 }
+
+/* Done / not done toggle */
+.check {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 1.4em;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.done .task-text {
+    text-decoration: line-through;
+    color: #666;
+}
