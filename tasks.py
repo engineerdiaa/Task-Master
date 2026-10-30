@@ -1,5 +1,5 @@
-from flask import (Blueprint, abort, current_app, redirect, render_template,
-                   request, url_for)
+from flask import (Blueprint, abort, current_app, flash, redirect,
+                   render_template, request, url_for)
 from sqlalchemy.exc import SQLAlchemyError
 
 from models import TASK_MAX_LENGTH, Todo, db
@@ -47,6 +47,7 @@ def index():
         new_task = Todo(content=task_content)
         db.session.add(new_task)
         save_changes('add your task')
+        flash('Task added.', 'success')
         return redirect(url_for('tasks.index'))
 
     return render_template('index.html', tasks=all_tasks())
@@ -66,6 +67,7 @@ def delete(task_id):
     task_to_delete = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
     db.session.delete(task_to_delete)
     save_changes('delete that task')
+    flash('Task deleted.', 'success')
     return redirect(url_for('tasks.index'))
 
 
@@ -81,6 +83,7 @@ def update(task_id):
 
         task.content = content
         save_changes('update your task')
+        flash('Task updated.', 'success')
         return redirect(url_for('tasks.index'))
 
     return render_template('update.html', task=task, content=task.content)

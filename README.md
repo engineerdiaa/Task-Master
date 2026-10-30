@@ -9,6 +9,7 @@ stored in a SQLite database.
 - Add, edit and delete tasks (1–200 characters; blank tasks are rejected)
 - Mark tasks as done (and undo it); done tasks are crossed out
 - See when each task was added
+- Confirmation messages after adding, editing or deleting a task
 
 ## Requirements
 
@@ -74,6 +75,10 @@ example, to use a different database file:
 ```bash
 FLASK_SQLALCHEMY_DATABASE_URI=sqlite:///other.db python app.py
 ```
+
+The secret key that signs the session cookie is created automatically and
+saved in `instance/secret_key` (which is not in git). To use your own, set
+`FLASK_SECRET_KEY`.
 
 ## Project layout
 

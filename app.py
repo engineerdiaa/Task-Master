@@ -1,4 +1,5 @@
 import os
+import secrets
 
 from flask import Flask, render_template
 from flask_migrate import Migrate, upgrade
@@ -26,6 +27,8 @@ def create_app(test_config=None):
     app.config.from_prefixed_env()
     if test_config:
         app.config.update(test_config)
+    if not app.config['SECRET_KEY']:
+        app.config['SECRET_KEY'] = instance_secret_key(app)
 
     db.init_app(app)
     migrate.init_app(app, db, directory=os.path.join(app.root_path, 'migrations'))
@@ -39,6 +42,22 @@ def create_app(test_config=None):
             upgrade()
 
     return app
+
+
+def instance_secret_key(app):
+    """Return a random secret key saved in the instance folder, creating it
+    the first time. The key signs the session cookie (used for messages
+    like "Task added"), so it must stay private: instance/ is not in git."""
+    path = os.path.join(app.instance_path, 'secret_key')
+    if os.path.exists(path):
+        with open(path) as f:
+            return f.read().strip()
+
+    key = secrets.token_hex(32)
+    os.makedirs(app.instance_path, exist_ok=True)
+    with open(path, 'w') as f:
+        f.write(key)
+    return key
 
 
 def handle_http_error(error):
