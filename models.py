@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -13,6 +13,17 @@ class Todo(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now)
     completed = db.Column(db.Boolean, nullable=False, default=False,
                           server_default=db.false())
+    due_date = db.Column(db.Date)
+
+    @property
+    def is_overdue(self):
+        """True if the task isn't done and its due date has passed."""
+        return (not self.completed and self.due_date is not None
+                and self.due_date < date.today())
+
+    @property
+    def is_due_today(self):
+        return not self.completed and self.due_date == date.today()
 
     def __repr__(self):
         return '<Task %r>' % self.id

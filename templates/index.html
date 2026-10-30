@@ -14,11 +14,12 @@
         <tr>
             <th>Done</th>
             <th>Task</th>
+            <th>Due</th>
             <th>Added</th>
             <th>Actions</th>
         </tr>
         {% for task in tasks %}
-            <tr{% if task.completed %} class="done"{% endif %}>
+            <tr class="{% if task.completed %}done{% elif task.is_overdue %}overdue{% elif task.is_due_today %}due-today{% endif %}">
                 <td>
                     <form action="{{ url_for('tasks.toggle', task_id=task.id) }}" method="POST">
                         <button type="submit" class="check"
@@ -28,6 +29,15 @@
                     </form>
                 </td>
                 <td class="task-text">{{ task.content }}</td>
+                <td class="due">
+                    {% if task.due_date %}
+                        {{ task.due_date.isoformat() }}
+                        {% if task.is_overdue %}<span class="badge">Overdue</span>
+                        {% elif task.is_due_today %}<span class="badge">Today</span>{% endif %}
+                    {% else %}
+                        &mdash;
+                    {% endif %}
+                </td>
                 <td> {{ task.date_created.date() }}</td>
                 <td>
                     <a href="{{ url_for('tasks.update', task_id=task.id) }}">Update</a>
@@ -44,8 +54,7 @@
             <p class="error" role="alert">{{ error }}</p>
             {% endif %}
             <form action="{{ url_for('tasks.index') }}" method="POST">
-                <input type="text" name="content" id="content" value="{{ content or '' }}"
-                       required maxlength="{{ TASK_MAX_LENGTH }}">
+                {% include '_task_fields.html' %}
                 <input type="submit" value="Add Task">
             </form>
         </div>

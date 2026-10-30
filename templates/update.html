@@ -14,9 +14,7 @@
         <p class="error" role="alert">{{ error }}</p>
         {% endif %}
         <form action="{{ url_for('tasks.update', task_id=task.id) }}" method="POST">
-            <input type="text" name="content" id="content"
-                   value="{{ content }}"
-                   required maxlength="{{ TASK_MAX_LENGTH }}">
+            {% include '_task_fields.html' %}
             <input type="submit" value="Update">
         </form>
     </div>

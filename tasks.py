@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import (Blueprint, abort, current_app, flash, redirect,
                    render_template, request, url_for)
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,14 +11,26 @@ bp = Blueprint('tasks', __name__)
 TASK_NOT_FOUND = 'That task does not exist. It may have been deleted.'
 
 
-def clean_content(raw):
-    """Return (content, error) for the text typed into a task form."""
-    content = raw.strip()
+def read_task_form(form):
+    """Check the fields sent by an add or edit form.
+
+    Returns (values, error): values holds the cleaned-up fields, ready to
+    set on a Todo, and error is a message to show the user, or None.
+    """
+    content = form.get('content', '').strip()
+    due_text = form.get('due_date', '').strip()
+    values = {'content': content, 'due_date': None}
+
     if not content:
-        return content, "Task can't be empty."
+        return values, "Task can't be empty."
     if len(content) > TASK_MAX_LENGTH:
-        return content, f'Task must be {TASK_MAX_LENGTH} characters or fewer.'
-    return content, None
+        return values, f'Task must be {TASK_MAX_LENGTH} characters or fewer.'
+    if due_text:
+        try:
+            values['due_date'] = date.fromisoformat(due_text)
+        except ValueError:
+            return values, 'Due date must be a real date, like 2026-12-31.'
+    return values, None
 
 
 def all_tasks():
@@ -39,18 +53,18 @@ def save_changes(action):
 @bp.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        task_content, error = clean_content(request.form.get('content', ''))
+        values, error = read_task_form(request.form)
         if error:
             return render_template('index.html', tasks=all_tasks(), error=error,
-                                   content=task_content), 400
+                                   form=request.form), 400
 
-        new_task = Todo(content=task_content)
+        new_task = Todo(**values)
         db.session.add(new_task)
         save_changes('add your task')
         flash('Task added.', 'success')
         return redirect(url_for('tasks.index'))
 
-    return render_template('index.html', tasks=all_tasks())
+    return render_template('index.html', tasks=all_tasks(), form={})
 
 
 @bp.route('/toggle/<int:task_id>', methods=['POST'])
@@ -76,14 +90,19 @@ def update(task_id):
     task = db.get_or_404(Todo, task_id, description=TASK_NOT_FOUND)
 
     if request.method == 'POST':
-        content, error = clean_content(request.form.get('content', ''))
+        values, error = read_task_form(request.form)
         if error:
             return render_template('update.html', task=task, error=error,
-                                   content=content), 400
+                                   form=request.form), 400
 
-        task.content = content
+        for field, value in values.items():
+            setattr(task, field, value)
         save_changes('update your task')
         flash('Task updated.', 'success')
         return redirect(url_for('tasks.index'))
 
-    return render_template('update.html', task=task, content=task.content)
+    form = {
+        'content': task.content,
+        'due_date': task.due_date.isoformat() if task.due_date else '',
+    }
+    return render_template('update.html', task=task, form=form)

@@ -86,3 +86,27 @@ form.inline {
     background-color: #d7f5dd;
     border: 1px solid #2e7d32;
 }
+
+/* Due dates */
+.badge {
+    display: inline-block;
+    margin-left: 0.3em;
+    padding: 0 0.4em;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: white;
+}
+
+.overdue .due {
+    color: #b00020;
+    font-weight: bold;
+}
+
+.overdue .badge {
+    background-color: #b00020;
+}
+
+.due-today .badge {
+    background-color: #a15c00;
+}

@@ -1,0 +1,6 @@
+{# Fields shared by the add and edit forms. Expects `form` with the values to show. #}
+<input type="text" name="content" id="content" value="{{ form.content }}"
+       placeholder="What needs doing?" aria-label="Task"
+       required maxlength="{{ TASK_MAX_LENGTH }}">
+<label for="due_date">Due</label>
+<input type="date" name="due_date" id="due_date" value="{{ form.due_date }}">
