@@ -16,6 +16,7 @@
         <form action="{{ url_for('tasks.update', task_id=task.id, **view) }}" method="POST">
             {% include '_task_fields.html' %}
             <input type="submit" value="Update">
+            <a href="{{ url_for('tasks.index', **view) }}" class="cancel">Cancel</a>
         </form>
     </div>
 </div>

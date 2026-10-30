@@ -127,3 +127,7 @@ form.inline {
 .priority-1 {
     color: #666;
 }
+
+.cancel {
+    margin-left: 0.5em;
+}
