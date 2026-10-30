@@ -20,6 +20,8 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_mapping(
         SQLALCHEMY_DATABASE_URI='sqlite:///test.db',
+        # Bring the database up to date every time the app starts.
+        AUTO_MIGRATE=True,
     )
     app.config.from_prefixed_env()
     if test_config:
@@ -31,9 +33,10 @@ def create_app(test_config=None):
     app.register_error_handler(HTTPException, handle_http_error)
     app.jinja_env.globals['TASK_MAX_LENGTH'] = TASK_MAX_LENGTH
 
-    # Create the database tables, or bring an older database up to date.
-    with app.app_context():
-        upgrade()
+    if app.config['AUTO_MIGRATE']:
+        # Create the database tables, or bring an older database up to date.
+        with app.app_context():
+            upgrade()
 
     return app
 

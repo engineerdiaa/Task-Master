@@ -102,6 +102,18 @@ flask --app app db migrate -m "Describe the change"
 
 Check the new file in `migrations/versions/`, then start the app to apply it.
 
+Because the app upgrades the database whenever it starts (including when you
+run a `flask` command), a `flask db downgrade` is undone the next time the app
+loads. To undo a migration, turn the automatic upgrade off for that command:
+
+```bash
+FLASK_AUTO_MIGRATE=false flask --app app db downgrade
+```
+
+On Windows PowerShell, run `$env:FLASK_AUTO_MIGRATE = "false"` first, then
+the `flask` command. Remove the setting afterwards with
+`Remove-Item Env:FLASK_AUTO_MIGRATE`.
+
 ## Updating requirements.txt
 
 After installing a new package, save the list of packages with:
