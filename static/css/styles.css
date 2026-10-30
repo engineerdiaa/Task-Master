@@ -34,3 +34,18 @@ td {
     color: #b00020;
     font-weight: bold;
 }
+
+form.inline {
+    display: inline;
+}
+
+/* A button that looks like a link, for actions that change data. */
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0000ee;
+    text-decoration: underline;
+    font: inherit;
+    cursor: pointer;
+}
