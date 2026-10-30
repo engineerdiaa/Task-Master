@@ -1,0 +1,13 @@
+{%extends 'base.html'%}
+
+{%block head%}
+<title>{{ error.code }} {{ error.name }} - Task Master</title>
+{%endblock%}
+
+{%block body%}
+<section class="card narrow">
+    <h1>{{ error.code }} {{ error.name }}</h1>
+    <p>{{ error.description }}</p>
+    <p><a href="{{ url_for('tasks.index') }}" class="button button-primary">Back to your tasks</a></p>
+</section>
+{%endblock%}

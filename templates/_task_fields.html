@@ -1,0 +1,18 @@
+{# Fields shared by the add and edit forms. Expects `form` with the values to show. #}
+<div class="field field-grow">
+    <label for="content">Task</label>
+    <input type="text" name="content" id="content" value="{{ form.content }}"
+           placeholder="What needs doing?" required maxlength="{{ TASK_MAX_LENGTH }}">
+</div>
+<div class="field">
+    <label for="due_date">Due date</label>
+    <input type="date" name="due_date" id="due_date" value="{{ form.due_date }}">
+</div>
+<div class="field">
+    <label for="priority">Priority</label>
+    <select name="priority" id="priority">
+        {% for value, label in PRIORITIES.items() %}
+        <option value="{{ value }}"{% if form.priority == value|string %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+</div>

@@ -3,10 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/styles.css')}}">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {%block head%}{%endblock%}
 </head>
 <body>
-{%block body%}{%endblock%}
+<header class="site-header">
+    <a class="brand" href="{{ url_for('tasks.index') }}">Task Master</a>
+    {% if current_user.is_authenticated %}
+    <div class="account">
+        <span>Signed in as <strong>{{ current_user.username }}</strong></span>
+        <form action="{{ url_for('auth.logout') }}" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="button button-quiet button-small">Log out</button>
+        </form>
+    </div>
+    {% endif %}
+</header>
+<main class="page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes">
+        {% for category, message in messages %}
+        <p class="flash flash-{{ category }}" role="status">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {%block body%}{%endblock%}
+</main>
 </body>
 </html>

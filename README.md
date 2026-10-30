@@ -1,0 +1,222 @@
+# Task Master
+
+[![Tests](https://github.com/engineerdiaa/Task-Master/actions/workflows/tests.yml/badge.svg)](https://github.com/engineerdiaa/Task-Master/actions/workflows/tests.yml)
+
+A small to-do list web app built with [Flask](https://flask.palletsprojects.com/)
+and [Flask-SQLAlchemy](https://flask-sqlalchemy.readthedocs.io/). Tasks are
+stored in a SQLite file on your computer, or in PostgreSQL when deployed.
+
+## Features
+
+- User accounts: sign up, log in and out; everyone sees only their own tasks
+- Add, edit and delete tasks (1–200 characters; blank tasks are rejected)
+- Mark tasks as done (and undo it); done tasks are crossed out
+- Optional due dates: overdue tasks are shown in red, tasks due today are tagged
+- Priority (Low, Medium, High) for each task
+- Show all, active or done tasks, and search them by text
+- Sort the list by date added, due date or priority
+- See when each task was added
+- Confirmation messages after adding, editing or deleting a task
+- Clean, responsive design that works on phones, with automatic dark mode
+
+## Requirements
+
+- Python 3.12 or newer
+
+## Getting started
+
+### Windows (PowerShell)
+
+```powershell
+python -m venv env
+env\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+### macOS / Linux
+
+```bash
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+Then open <http://127.0.0.1:5000> in your browser and create an account.
+
+If you used the app before accounts were added, your existing tasks are given
+to the first account that is created.
+
+The database is created automatically the first time the app starts, at
+`instance/test.db`. To start over with an empty list, stop the app and delete
+that file.
+
+You can also start the app with Flask's own command:
+
+```bash
+flask --app app run
+```
+
+## Debug mode
+
+Debug mode reloads the app when you change the code and shows detailed error
+pages in the browser. Those pages include a debugger that can run Python
+code, so debug mode is off by default and must never be on when other people
+can reach the app. Turn it on only while developing:
+
+```powershell
+# Windows (PowerShell)
+$env:FLASK_DEBUG = "1"
+python app.py
+```
+
+```bash
+# macOS / Linux
+FLASK_DEBUG=1 python app.py
+```
+
+Or use `flask --app app run --debug`.
+
+## Settings
+
+Settings are read from environment variables that start with `FLASK_`. For
+example, to use a different database file:
+
+```bash
+FLASK_SQLALCHEMY_DATABASE_URI=sqlite:///other.db python app.py
+```
+
+The secret key that signs the session cookie is created automatically and
+saved in `instance/secret_key` (which is not in git). To use your own, set
+`FLASK_SECRET_KEY`.
+
+Other settings:
+
+| Variable | What it does |
+| --- | --- |
+| `DATABASE_URL` | Database to use instead of the SQLite file, e.g. a PostgreSQL URL from a hosting service (`postgres://...` works) |
+| `FLASK_AUTO_MIGRATE` | `false` stops the app upgrading the database when it starts |
+| `FLASK_BEHIND_PROXY` | `true` when a hosting service's proxy sits in front of the app |
+| `FLASK_SESSION_COOKIE_SECURE`, `FLASK_REMEMBER_COOKIE_SECURE` | `true` to send login cookies over HTTPS only |
+
+## Project layout
+
+```
+app.py              Creates and configures the Flask app (create_app)
+models.py           Database models (User, Todo)
+auth.py             Sign up, log in and log out (Flask blueprint)
+tasks.py            Pages and actions for tasks (Flask blueprint)
+migrations/         Database migrations (Flask-Migrate / Alembic)
+templates/          HTML templates (Jinja)
+static/css/         Stylesheet
+tests/              Automated tests (pytest)
+render.yaml         Deployment settings for Render
+requirements.txt    Python packages the app needs
+requirements-dev.txt  Extra packages for running the tests
+```
+
+## Running the tests
+
+Install the test tools once, then run `pytest` from the project folder:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Each test uses its own temporary database, so your tasks are never touched.
+The tests cover adding, editing, ticking and deleting tasks, form checks, due
+dates, priorities, sorting, filtering and search, accounts and privacy between
+users, CSRF protection, error pages and the database migrations. They also fail
+if a model in `models.py` is changed without a matching migration.
+
+`tests/test_postgres.py` runs the main features against a real PostgreSQL
+database. It is skipped unless you point it at an empty one:
+
+```bash
+TEST_DATABASE_URL=postgresql://user:password@localhost/taskmaster pytest
+```
+
+GitHub Actions runs the tests on every push and pull request, on Linux
+(Python 3.12 and 3.13), Windows (Python 3.12) and against PostgreSQL. See the
+**Actions** tab on GitHub for the results.
+
+## Deploying to Render
+
+The repository includes a [Render](https://render.com) Blueprint,
+`render.yaml`, that creates the web app and a PostgreSQL database for it.
+
+1. Sign in to Render with your GitHub account.
+2. Choose **New > Blueprint** and pick this repository (and the branch you want
+   to deploy).
+3. Check the two resources it lists, `task-master` and `task-master-db`, and
+   click **Deploy**.
+4. When the deploy finishes, open the `onrender.com` address Render shows and
+   create your account.
+
+What the Blueprint sets up:
+
+- The app runs with [Gunicorn](https://gunicorn.org/), a production web
+  server, instead of Flask's development server.
+- Tasks are stored in PostgreSQL. Render's web servers lose their files when
+  they restart, so a SQLite file would be wiped.
+- `FLASK_SECRET_KEY` is a random value Render generates and keeps secret.
+- Login cookies are only sent over HTTPS.
+- The database is upgraded automatically each time the app starts.
+
+Render's free plans have limits (for example, free web services go to sleep
+when unused, and free databases may expire). Check Render's pricing page for
+the current details before relying on it for important data.
+
+## Security notes
+
+- Passwords are stored only as salted hashes (Werkzeug's scrypt), never as
+  plain text.
+- Every form that changes data includes a CSRF token
+  ([Flask-WTF](https://flask-wtf.readthedocs.io/)), so other websites can't
+  submit forms on a logged-in user's behalf.
+- Asking for another user's task gives the same "not found" page as a task
+  that doesn't exist.
+
+## Changing the database
+
+The app uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) to keep
+the database in step with the code. When the app starts it applies any
+migrations the database is missing, so existing tasks are kept when new
+columns are added.
+
+If you change a model in `models.py`, create a migration for it:
+
+```bash
+flask --app app db migrate -m "Describe the change"
+```
+
+Check the new file in `migrations/versions/`, then start the app to apply it.
+
+Because the app upgrades the database whenever it starts (including when you
+run a `flask` command), a `flask db downgrade` is undone the next time the app
+loads. To undo a migration, turn the automatic upgrade off for that command:
+
+```bash
+FLASK_AUTO_MIGRATE=false flask --app app db downgrade
+```
+
+On Windows PowerShell, run `$env:FLASK_AUTO_MIGRATE = "false"` first, then
+the `flask` command. Remove the setting afterwards with
+`Remove-Item Env:FLASK_AUTO_MIGRATE`.
+
+## Updating requirements.txt
+
+After installing a new package, save the list of packages with:
+
+```bash
+python -m pip freeze > requirements.txt
+```
+
+In Windows PowerShell 5, `>` saves the file as UTF-16, which GitHub shows as
+a binary file. Use this instead:
+
+```powershell
+python -m pip freeze | Out-File -Encoding utf8 requirements.txt
+```

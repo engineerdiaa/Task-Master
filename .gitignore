@@ -1,0 +1,25 @@
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Flask instance folder (local database, secret key)
+instance/
+
+# Test and tool caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment variables
+.env
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,31 +1,568 @@
-.form1 {
-    text-align: center;
+/* ---------------------------------------------------------------------
+   Colours. Every colour comes from these variables, so dark mode only
+   needs to swap them.
+   --------------------------------------------------------------------- */
+:root {
+    color-scheme: light dark;
 
+    --bg: #f3f5fa;
+    --surface: #ffffff;
+    --surface-alt: #f7f8fc;
+    --text: #1d2330;
+    --muted: #5f6b7a;
+    --border: #d9dfe8;
+    --border-strong: #9aa5b5;
+
+    --accent: #2f6fde;
+    --accent-hover: #2459b5;
+    --on-accent: #ffffff;
+    --accent-soft: #e5eeff;
+
+    --danger: #c0262d;
+    --danger-soft: #fde8e8;
+    --warning: #9a5200;
+    --warning-soft: #fff1dc;
+    --success: #23703a;
+    --success-soft: #e2f6e7;
+
+    --radius: 10px;
+    --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 12px rgb(16 24 40 / 6%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0f141b;
+        --surface: #18202b;
+        --surface-alt: #1e2734;
+        --text: #e6eaf0;
+        --muted: #9aa6b5;
+        --border: #2c3747;
+        --border-strong: #56657a;
+
+        --accent: #6ea2ff;
+        --accent-hover: #93baff;
+        --on-accent: #0b1220;
+        --accent-soft: #1c2b47;
+
+        --danger: #ff7b7b;
+        --danger-soft: #3d1d21;
+        --warning: #f3a64a;
+        --warning-soft: #3a2a14;
+        --success: #67d391;
+        --success-soft: #173326;
+
+        --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 12px rgb(0 0 0 / 25%);
+    }
+}
+
+/* ---------------------------------------------------------------------
+   Page layout
+   --------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
-margin: 0;
-font-family: sans-serif;
-background-color: lightcyan;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
-h1, h2, h4 {
+a {
+    color: var(--accent);
+}
+
+a:hover {
+    color: var(--accent-hover);
+}
+
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    /* Line the header up with the page content below it. */
+    padding: 0.75rem max(1rem, calc((100% - 60rem) / 2 + 1rem));
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.account {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted);
+}
+
+.account strong {
+    color: var(--text);
+}
+
+.page {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+h1 {
+    margin: 0 0 1rem;
+    font-size: 1.6rem;
+}
+
+.card {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.card.narrow {
+    max-width: 26rem;
+}
+
+.message,
+.empty {
+    margin: 1rem 0;
+    color: var(--muted);
     text-align: center;
 }
 
-table {
-    border-collapse: collapse;
-    /* Removes the double-border look */
-    width: auto;
-    /* Optional: Makes it look nicer */
-    margin: 0 auto;
-    /* This centers the table horizontally */
+/* Hidden on screen but still read out by screen readers. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
-th,
-td {
-    border: 1px solid black;
-    /* This creates the actual lines */
+/* ---------------------------------------------------------------------
+   Forms and buttons
+   --------------------------------------------------------------------- */
+input,
+select,
+button {
+    font: inherit;
+    color: inherit;
+}
+
+input[type=text],
+input[type=search],
+input[type=password],
+input[type=date],
+select {
+    min-height: 2.5rem;
+    padding: 0.4rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+}
+
+form.inline {
+    display: inline;
+}
+
+.task-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.field-grow {
+    flex: 1 1 16rem;
+}
+
+.field label {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Edit, log in and sign up forms: one field per line. */
+.stacked-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.stacked-form .field-grow {
+    flex: none;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.button,
+.cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.button-primary:hover {
+    background: var(--accent-hover);
+}
+
+.button-quiet,
+.cancel {
+    background: transparent;
+    border-color: var(--border-strong);
+    color: var(--text);
+}
+
+.button-quiet:hover,
+.cancel:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+}
+
+.button-small {
+    min-height: 2rem;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.875rem;
+}
+
+.button-danger {
+    color: var(--danger);
+}
+
+.button-danger:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.error {
+    margin: 0 0 1rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--danger-soft);
+    border-left: 4px solid var(--danger);
+    border-radius: 6px;
+    color: var(--danger);
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
+   Messages ("Task added.")
+   --------------------------------------------------------------------- */
+.flashes {
+    margin-bottom: 1.25rem;
+}
+
+.flash {
+    margin: 0 0 0.5rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid;
+    border-radius: var(--radius);
+}
+
+.flash-success {
+    background: var(--success-soft);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.flash-info {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+/* ---------------------------------------------------------------------
+   Filters, search and sorting
+   --------------------------------------------------------------------- */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.pills .label {
+    margin-right: 0.25rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.pills a,
+.pills strong {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.pills a {
+    color: var(--muted);
+}
+
+.pills a:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+}
+
+.pills strong {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search input[type=search] {
+    width: 14rem;
+}
+
+.sort {
+    margin-bottom: 1rem;
+}
+
+/* ---------------------------------------------------------------------
+   Task list
+   --------------------------------------------------------------------- */
+.tasks {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tasks th {
+    padding: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
     text-align: left;
-    padding: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.tasks td {
+    padding: 0.65rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.tasks tbody tr:hover {
+    background: var(--surface-alt);
+}
+
+.task-text {
+    width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.due,
+.added {
+    white-space: nowrap;
+}
+
+.added {
+    color: var(--muted);
+}
+
+.actions {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.actions > * + * {
+    margin-left: 0.35rem;
+}
+
+/* The done / not done button is drawn as a checkbox. */
+.check {
+    display: block;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.check:hover {
+    border-color: var(--accent);
+}
+
+.done .check {
+    position: relative;
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.done .check::after {
+    content: "";
+    position: absolute;
+    left: 0.38rem;
+    top: 0.12rem;
+    width: 0.35rem;
+    height: 0.7rem;
+    border: solid var(--on-accent);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.done .task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+
+.badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.overdue .due {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.overdue .badge {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.due-today .badge {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+
+.priority-3 {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.priority-1 {
+    color: var(--muted);
+}
+
+/* ---------------------------------------------------------------------
+   Small screens: each task becomes a small card instead of a table row.
+   --------------------------------------------------------------------- */
+@media (max-width: 40rem) {
+    .site-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .page {
+        padding: 1rem 0.75rem 2rem;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .search,
+    .search input[type=search] {
+        width: 100%;
+    }
+
+    .search input[type=search] {
+        flex: 1;
+    }
+
+    .tasks thead {
+        display: none;
+    }
+
+    .tasks,
+    .tasks tbody,
+    .tasks td {
+        display: block;
+    }
+
+    .tasks tr {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.25rem 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .tasks td {
+        padding: 0;
+        border: none;
+    }
+
+    .tasks .cell-check {
+        grid-row: span 5;
+    }
+
+    .tasks td[data-label]::before {
+        content: attr(data-label) ": ";
+        color: var(--muted);
+        font-size: 0.875rem;
+        font-weight: 400;
+    }
+
+    .actions {
+        text-align: left;
+        padding-top: 0.35rem;
+    }
 }

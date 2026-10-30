@@ -1,0 +1,38 @@
+{%extends 'base.html'%}
+
+{%block head%}
+<title>Create an account - Task Master</title>
+{%endblock%}
+
+{%block body%}
+<section class="card narrow">
+    <h1>Create an account</h1>
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form class="stacked-form" action="{{ url_for('auth.register') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+            <label for="username">Username</label>
+            <input type="text" name="username" id="username" value="{{ username }}"
+                   autocomplete="username" required autofocus
+                   minlength="3" maxlength="{{ USERNAME_MAX_LENGTH }}" pattern="[A-Za-z0-9_.\-]+"
+                   title="Letters, numbers, dots, dashes or underscores">
+        </div>
+        <div class="field">
+            <label for="password">Password (at least {{ PASSWORD_MIN_LENGTH }} characters)</label>
+            <input type="password" name="password" id="password" autocomplete="new-password"
+                   required minlength="{{ PASSWORD_MIN_LENGTH }}" maxlength="{{ PASSWORD_MAX_LENGTH }}">
+        </div>
+        <div class="field">
+            <label for="confirm">Repeat password</label>
+            <input type="password" name="confirm" id="confirm" autocomplete="new-password"
+                   required minlength="{{ PASSWORD_MIN_LENGTH }}" maxlength="{{ PASSWORD_MAX_LENGTH }}">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">Create account</button>
+        </div>
+    </form>
+    <p class="message">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</section>
+{%endblock%}
