@@ -1,3 +1,5 @@
+# Task Master by @diaawastaken · github.com/engineerdiaa/Task-Master
+
 import re
 from urllib.parse import urlsplit
 
